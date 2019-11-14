@@ -1,0 +1,11 @@
+{
+    "name": "attendance-helper",
+    "version": "1.0.0",
+    "description": "Attendance automatization of a google sheet through discord commands",
+    "main": "bot.js",
+    "author": "Dereai",
+    "dependencies": {
+        "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+        "winston": "^3.2.1"
+    }
+}
