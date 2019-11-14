@@ -25,7 +25,7 @@ var botChannelID = 0;
 var testChannelId = 644516490946543657;
 
 function checkValidDate(day, month, year){
-    var date = year+"-"+month+"-"+day+"T21:25:00Z"
+    var date = year+"-"+month+"-"+day+"T21:15:00Z"
     var compareDate = new Date(date).getTime()
     var currentDate = new Date().getTime()
     console.log(currentDate + "<->"+compareDate)
@@ -36,48 +36,44 @@ function checkValidDate(day, month, year){
 
 
 bot.on('message', function (user, userID, channelID, message, evt) {
+   
+    
     if (message.substring(0, 1) == '!') {
         
         try{
             var info = message.split(" ");
             var commandListener = info[0].substring(1,info[0].length);
             var date = info[1].split("/");
-        }catch(Exception){
-            bot.sendMessage({
-                to: channelID,
-                message: "Invalid command!"
-            });
-        }
-       
-        if(dateRegex.test(info[1])){
-            var day = date[0];
-            var month = months[parseInt(date[1])];
-            var year = date[2];
-            switch(commandListener) {
-                case 'miss':
-                    if (channelID == testChannelId){
-                        
-                        if(checkValidDate(day,parseInt(date[1]),year)){
+            if(dateRegex.test(info[1])){
+                var day = date[0];
+                var month = months[parseInt(date[1])];
+                var year = date[2];
+                switch(commandListener) {
+                    case 'miss':
+                        if (channelID == testChannelId){
+                            //TODO: IMPLEMENTAR SPREADSHEET
+                            if(checkValidDate(day,parseInt(date[1]),year)){
+                                bot.sendMessage({
+                                    to: channelID,
+                                    message: user + ' vai faltar no dia ' +day + " de " +month+ " de " +year
+                                });
+                            }else{
+                                bot.sendMessage({
+                                    to: userID,
+                                    message: "Não queiras voltar atrás no tempo palhaço"                    });
+                            }
+                        }
+                        else{
                             bot.sendMessage({
                                 to: channelID,
-                                message: user + ' vai faltar no dia ' +day + " de " +month+ " de " +year
-                            });
-                        }else{
-                            bot.sendMessage({
-                                to: userID,
-                                message: "Não queiras voltar atrás no tempo palhaço"                    });
+                                message: "Unauthorized channel to send message"                    });
                         }
-                    }
-                    else{
-                        bot.sendMessage({
-                            to: channelID,
-                            message: "Unauthorized channel to send message"                    });
-                    }
-                    
-                break;
-    
-                case 'come':
+                        
+                        break;
+        
+                    case 'come':
                         if (channelID == testChannelId){
+                             //TODO: IMPLEMENTAR SPREADSHEET
                             if(checkValidDate(day,parseInt(date[1]),year)){
                             bot.sendMessage({
                                 to: channelID,
@@ -95,14 +91,26 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                 to: channelID,
                                 message: "Unauthorized channel to send message"                    });
                         }
-                }  
-            }else{
-                bot.sendMessage({
-                    to: channelID,
-                    message: "Data inválida"
-                });
-            }
-        }
-        
-        
+                        break;
+                    case 'avail':
+                            //TODO: returns the number of people available for a specific day
+                            bot.sendMessage({
+                                to: channelID,
+                                message: "Há " +30+" pessoas disponiveis para dia " +day+ " de "+month+ " de " +year});
+                            }
+                        
+                }else{
+                    bot.sendMessage({
+                        to: channelID,
+                        message: "Invalid date!"
+                    });
+                }
+            
+        }catch(Exception){
+            bot.sendMessage({
+                to: channelID,
+                message: "Invalid, a command requires a date!"
+            });
+        } 
+    }  
 });
