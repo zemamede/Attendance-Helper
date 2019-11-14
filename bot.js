@@ -77,19 +77,18 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             if(checkValidDate(day,parseInt(date[1]),year)){
                             bot.sendMessage({
                                 to: channelID,
-                                message: user +' mudou de planos e pode vir no dia '+ date[0]+ " de " +months[parseInt(date[1])]+ " de " +date[2]
-                            });
-                        }
-                        else{
-                            bot.sendMessage({
-                                to: userID,
-                                message: "Não queiras voltar atrás no tempo palhaço"                    });
+                                message: user +' mudou de planos e pode vir no dia '+ date[0]+ " de " +months[parseInt(date[1])]+ " de " +date[2] });
+                            }
+                            else{
+                                bot.sendMessage({
+                                    to: userID,
+                                    message: "Não queiras voltar atrás no tempo palhaço"});
                             }
                         }   
                         else{
                             bot.sendMessage({
                                 to: channelID,
-                                message: "Unauthorized channel to send message"                    });
+                                message: "Unauthorized channel to send message"});
                         }
                         break;
                     case 'avail':
@@ -97,20 +96,25 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             bot.sendMessage({
                                 to: channelID,
                                 message: "Há " +30+" pessoas disponiveis para dia " +day+ " de "+month+ " de " +year});
-                            }
+                            break;
                         
+                    default:
+                            bot.sendMessage({
+                                to: channelID,
+                                message: "Command not found!"});
+                            }
+                           
+                          
                 }else{
                     bot.sendMessage({
                         to: channelID,
-                        message: "Invalid date!"
-                    });
+                        message: "Invalid date!"});
                 }
             
         }catch(Exception){
             bot.sendMessage({
                 to: channelID,
-                message: "Invalid, a command requires a date!"
-            });
+                message: "Invalid command, requires a date!"});
         } 
     }  
 });
