@@ -34,49 +34,26 @@ function checkValidDate(day, month, year){
     return true;
 };
 
-function tryAndParseDate(info, channelId) {
-    try {
-        var date = info[1].split("/")
-        return date;
-    } catch (ex) {
-        console.log(ex)
-    }
-};
-
 function isEmptyOrSpaces(str) {
     return (str === null || (/^ *$/).test(str) !== null);
 };
 
 
 bot.on('message', function (user, userID, channelID, message, evt) {
-   
-    
     if (message.substring(0, 1) == '!' && isEmptyOrSpaces(command)) {
         try {
             var info = message.split(" ");
             var command = info[0].substring(1, info[0].length);
             if (channelID == testChannelId) {
-                var date = tryAndParseDate(info, channelID)
+                var values = tryAndParseDate(info[1], channelID)
                 switch (command) {
                     case 'miss':
-                        if (dateRegex.test(info[1])) {
-                            if (checkValidDate(date[0], parseInt(date[1]), date[2])) {
+                        if (values.success) {
                                 bot.sendMessage({
                                     to: channelID,
-                                    message: user + ' vai faltar no dia ' + date[0] + " de " + months[parseInt(date[1])] + " de " + date[2]
-                                });
-                            } else {
-                                bot.sendMessage({
-                                    to: userID,
-                                    message: "Não queiras voltar atrás no tempo palhaço"
+                                    message: user + ' vai faltar no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2]
                                 });
                             }
-                        } else {
-                            bot.sendMessage({
-                                to: channelID,
-                                message: "Invalid date!"
-                            });
-                        }
                         break;
                     case 'come':
                         if (dateRegex.test(info[1])) {
@@ -114,7 +91,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     case 'help':
                         bot.sendMessage({
                             to: channelID,
-                            message: "Type !miss !come !avail followed by {dd/MM/yyyy}"
+                            message: "Type !miss !come !avail followed by {dd/MM/yyyy}{dd-MM-yyyy}{dd.MM.yyyy}"
                         });
                         break;
                     default:
@@ -130,7 +107,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     message: "Unauthorized channel to send message"
                 });
             }
-        } catch(ex) {
+        } catch (ex) {
             bot.sendMessage({
                 to: channelID,
                 message: ex
@@ -138,3 +115,31 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         } 
     }  
 });
+
+function tryAndParseDate(info, channelId) {
+    try {
+        var date = null
+        if (dateRegex.test(info)) {
+            var date = info.split(/[./-]/)
+            if (checkValidDate(date[0], parseInt(date[1]), date[2])) {
+                return { success: true, Date: date };
+            } else {
+                bot.sendMessage({
+                    to: userID,
+                    message: "Não queiras voltar atrás no tempo palhaço"
+                });
+            }
+            if(date!=null)
+                return date;
+        } 
+        
+        bot.sendMessage({
+            to: channelId,
+            message: "Invalid date!"
+        });
+
+        return { success: false }
+    } catch (ex) {
+        console.log(ex)
+    }
+};
