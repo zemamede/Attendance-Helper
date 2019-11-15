@@ -21,7 +21,7 @@ bot.on('ready', function (evt) {
 
 var months = {1:"Janeiro", 2:"Fevereiro",3:"Março",4:"Abril",5:"Maio",6:"Junho",7:"Julho",8:"Agosto",9:"Setembro",10:"Outubro",11:"Novembro",12:"Dezembro"};
 var dateRegex = /(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})/i
-var testee = /^\![^\!]+$/
+var commandRegex = /^\![^\!]+$/
 var botChannelID = 0;
 var testChannelId = 644516490946543657;
 
@@ -39,9 +39,8 @@ function isEmptyOrSpaces(str) {
     return (str === null || (/^ *$/).test(str) !== null);
 };
 
-
 bot.on('message', function (user, userId, channelId, message, evt) {
-    if (testee.test(message)) {
+    if (commandRegex.test(message)) {
         try {
             var info = message.split(" ");
             var command = info[0].substring(1, info[0].length);
