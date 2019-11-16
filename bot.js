@@ -12,6 +12,7 @@ var client = new Discord.Client();
 
 client.on('ready', () => {
     console.log('Client has been started');
+    teste();
 });
 
 client.login(auth.token);
@@ -22,19 +23,33 @@ var commandRegex = /^\![^\!]+$/
 var botChannelID = 0;
 var testChannelId = 644516490946543657;
 
+const helpEmbeddedMessage = new Discord.RichEmbed()
+    .setColor('#0099ff')
+    .setTitle('SN Attendance helper')
+    .setDescription('User guide')
+    .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe', true)
+    .addField('Examples','!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy')
+
 function checkValidDate(day, month, year){
     var date = year+"-"+month+"-"+day+"T21:15:00Z"
     var compareDate = new Date(date).getTime()
     var currentDate = new Date().getTime()
-    console.log(currentDate + "<->"+compareDate)
     if( currentDate > compareDate )
         return false;
     return true;
 };
 
-function isEmptyOrSpaces(str) {
-    return (str === null || (/^ *$/).test(str) !== null);
-};
+function isDateRangeValid(dayA, monthA, yearA, dayB, monthB, yearB){
+    var dateA = yearA+"-"+monthA+"-"+dayA
+    var dateB = yearB+"-"+monthB+"-"+dayB
+    if(dateA < dateB)
+        return true;
+    return false;
+}
+
+function numberOfDaysBetweenDates(dateA, dateB){
+    return Math.round((dateB - dateA) / (1000*60*60*24))
+}
 
 client.on('message', message => {
     if (commandRegex.test(message.content)) {
@@ -48,48 +63,33 @@ client.on('message', message => {
                         if (values.success) {
                             message.channel.send(message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2]);
                         }
+                        else if(values.rangeSuccess){
+                            message.channel.send(message.author.username + ' vai faltar do dia ' + values.startDate[0] + ' de ' +months[parseInt(values.startDate[1])] + " de " + values.startDate[2]+" até " + values.endDate[0] + ' de ' + months[parseInt(values.endDate[1])] + " de " + values.endDate[2]);
+                        }
                         break;
                     case 'come':
                         var values = tryAndParseDate(info[1], message.channel.id, message.author.id)
                         if (values.success) {
-                                client.sendMessage({
-                                    to: channelId,
-                                    message: user + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2]
-                                });
+                            message.channel.send(message.author.username  + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2] );
                         }
                         break;
                     case 'avail':
-                        var values = tryAndParseDate(info[1], channelId,userId)
+                        var values = tryAndParseDate(message, info[1])
                         if (values.success) {
-                            client.sendMessage({
-                                to: channelId,
-                                message: "Há " + 30 + " pessoas disponiveis para dia " + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2]
-                            });
+                            message.channel.send("Há " + 30 + " pessoas disponiveis para dia " + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2]);
                         }
                         break;
                     case 'help':
-                        client.sendMessage({
-                            to: channelId,
-                            message: "Available Commands:\n\n !miss dd/MM/yyyy\n !come dd/MM/yyyy\n !avail dd/MM/yyyy\n\n"
-                        });
+                        message.channel.send(helpEmbeddedMessage);
                         break;
                     default:
-                        client.sendMessage({
-                            to: channelId,
-                            message: "Command not found!"
-                        });
+                            message.channel.send("Command not found!");
                 }
             } else {
-                client.sendMessage({
-                    to: userId,
-                    message: "Unauthorized channel to send message"
-                });
+                message.channel.send("Unauthorized channel to send message!");
             }
         } catch (ex) {
-            client.sendMessage({
-                to: channelId,
-                message: ex
-            });
+            message.channel.send(ex);
         } 
     }  
 });
@@ -97,21 +97,35 @@ client.on('message', message => {
 function tryAndParseDate(message, info) {
     try {
         var date = null
-        if (dateRegex.test(info)) {
-            var date = info.split(/[./-]/)
-            if (checkValidDate(date[0], parseInt(date[1]), date[2])) {
-                return { success: true, Date: date };
-            } else {
-                message.author.send("Não queiras voltar atrás no tempo palhaço");
+        var rangeDate = info.split(":");
+        if(rangeDate.length == 2){
+            if (dateRegex.test(rangeDate[0]) && dateRegex.test(rangeDate[1])) {
+                var dateA = rangeDate[0].split(/[./-]/);
+                var dateB  = rangeDate[1].split(/[./-]/);
+                if(checkValidDate(dateA[0],dateA[1],dateA[2]) && isDateRangeValid(dateA[0],dateA[1],dateA[2],dateB[0],dateB[1],dateB[2])){
+                    return { rangeSuccess: true, startDate: dateA, endDate: dateB };
+                } else {
+                    message.author.send("Não queiras voltar atrás no tempo :smile:");
+                }
+                return { rangeSuccess: false}
             }
-            if(date!=null)
-                return date;
+            message.channel.send("Invalid date range!")
+            return { rangeSuccess: false } 
+        }else{
+            if (dateRegex.test(info)) {
+                var date = info.split(/[./-]/)
+                if (checkValidDate(date[0], parseInt(date[1]), date[2])) {
+                    return { success: true, Date: date };
+                } else {
+                    message.author.send("Não queiras voltar atrás no tempo :smile:");
+                }
+                if(date!=null)
+                    return date;
+            }
+            message.channel.send("Invalid date!")
+            return { success: false }
         }
-        client.sendMessage({
-            to: channelId,
-            message: "Invalid date!"
-        });
-        return { success: false }
+        
     } catch (ex) {
         console.log(ex)
     }
