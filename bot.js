@@ -12,7 +12,6 @@ var client = new Discord.Client();
 
 client.on('ready', () => {
     console.log('Client has been started');
-    teste();
 });
 
 client.login(auth.token);
@@ -98,7 +97,7 @@ function tryAndParseDate(message, info) {
     try {
         var date = null
         var rangeDate = info.split(":");
-        if(rangeDate.length == 2){
+        if(rangeDate.length > 1){
             if (dateRegex.test(rangeDate[0]) && dateRegex.test(rangeDate[1])) {
                 var dateA = rangeDate[0].split(/[./-]/);
                 var dateB  = rangeDate[1].split(/[./-]/);
