@@ -34,7 +34,9 @@ client.on('message', message => {
             } else {
                 message.channel.send("Unauthorized channel to send message!");
             }
+            message.delete();
         } catch (ex) {
+            message.delete();
             message.channel.send(ex);
         } 
     }  

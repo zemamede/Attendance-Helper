@@ -34,37 +34,43 @@ class Consumer {
         return Math.round((dateB - dateA) / (1000 * 60 * 60 * 24))
     }
 
-    tryAndParseDate(message, info) {
+    tryAndParseDate(info) {
         try {
+            var errorMessage = null;
             var date = null
-            var rangeDate = info.split(":");
-            if (rangeDate.length > 1) {
-                if (dateRegex.test(rangeDate[0]) && dateRegex.test(rangeDate[1])) {
-                    var dateA = rangeDate[0].split(/[./-]/);
-                    var dateB = rangeDate[1].split(/[./-]/);
-                    if (this.checkValidDate(dateA[0], dateA[1], dateA[2]) && this.isDateRangeValid(dateA[0], dateA[1], dateA[2], dateB[0], dateB[1], dateB[2])) {
-                        return { rangeSuccess: true, startDate: dateA, endDate: dateB };
-                    } else {
-                        message.author.send("Não queiras voltar atrás no tempo :smile:");
+            //var rangeDate = info.includes(":");
+            if (info != null) {
+                if (info.includes(":")) {
+                    var rangeDate = info.split(":");
+                    if (dateRegex.test(rangeDate[0]) && dateRegex.test(rangeDate[1])) {
+                        var dateA = rangeDate[0].split(/[./-]/);
+                        var dateB = rangeDate[1].split(/[./-]/);
+                        if (this.checkValidDate(dateA[0], dateA[1], dateA[2]) && this.checkValidDate(dateB[0], dateB[1], dateB[2])) {
+                            if (this.isDateRangeValid(dateA[0], dateA[1], dateA[2], dateB[0], dateB[1], dateB[2])) {
+                                return { rangeSuccess: true, startDate: dateA, endDate: dateB };
+                            } else {
+                                errorMessage = "Invalid date range!";
+                            }
+                        } else {
+                            errorMessage = "Input dates are invalid";
+                        }
                     }
-                    return { rangeSuccess: false }
-                }
-                message.channel.send("Invalid date range!")
-                return { rangeSuccess: false }
-            } else {
-                if (dateRegex.test(info)) {
-                    var date = info.split(/[./-]/)
-                    if (this.checkValidDate(date[0], parseInt(date[1]), date[2])) {
-                        return { success: true, Date: date };
+                } else {
+                    if (dateRegex.test(info)) {
+                        var date = info.split(/[./-]/)
+                        if (this.checkValidDate(date[0], parseInt(date[1]), date[2])) {
+                            return { success: true, Date: date };
+                        } else {
+                            errorMessage = "Input date was set to the past :kekw:";
+                        }
                     } else {
-                        message.author.send("Não queiras voltar atrás no tempo :smile:");
+                        errorMessage = "Invalid date!";
                     }
-                    if (date != null)
-                        return date;
                 }
-                message.channel.send("Invalid date!")
-                return { success: false }
             }
+            if (errorMessage === null)
+                errorMessage = "Missing date OR date range!";
+            return { success: false, rangeSuccess: false, message: errorMessage }
         } catch (ex) {
             console.log(ex)
         }
@@ -72,9 +78,10 @@ class Consumer {
 
     RunCommand(command, message, info) { 
         var response = null;
+        var values = null;
         switch (command) {
             case 'miss':
-                var values = this.tryAndParseDate(message, info[1])
+                values = this.tryAndParseDate(info[1])
                 if (values.success) {
                     response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
                 }
@@ -85,13 +92,13 @@ class Consumer {
                 }
                 break;
             case 'come':
-                var values = this.tryAndParseDate(message, info[1])
+                values = this.tryAndParseDate(info[1])
                 if (values.success) {
                     response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
                 }
                 break;
             case 'avail':
-                var values = this.tryAndParseDate(message, info[1])
+                values = this.tryAndParseDate(info[1])
                 if (values.success) {
                     response = "Há " + 30 + " pessoas disponiveis para dia " + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
                 }
@@ -102,10 +109,10 @@ class Consumer {
             default:
                 response = "Command not found!";
         }
-        return JSON.parse(JSON.stringify(response));
-    }
-
-    
+        if (response == null)
+            return "<@" + message.author.id + "> " + values.message;
+        return ((typeof response) == (typeof new Discord.RichEmbed())) ? response : "<@" + message.author.id + "> " + response;
+    }   
 };
 
 module.exports = Consumer;
