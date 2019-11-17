@@ -10,7 +10,7 @@ const helpEmbeddedMessage = new Discord.RichEmbed()
     .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe', true)
     .addField('Examples', '!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy');
 
-const months = { 1: "Janeiro", 2: "Fevereiro", 3: "Mar�o", 4: "Abril", 5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro" };
+const months = {  };
 const dateRegex = /(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})/i
 
 class Consumer {
@@ -77,14 +77,14 @@ class Consumer {
         }
     }
 
-    RunCommand(command, message, info, OAuthClient) { 
+    RunCommand(command, message, info) { 
         var response = null;
         var values = null;
         switch (command) {
             case 'miss':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
-                    Dal.updateAttendance(true, info[1], "merda");
+                    Dal.updateAttendance("✔", values, "merda");
                     response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
                 }
                 else if (values.rangeSuccess) {

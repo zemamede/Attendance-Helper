@@ -48,7 +48,7 @@ function getNewToken(oAuth2Client) {
         scope: SCOPES,
     });
     console.log(authUrl);
-    code = auth.authToken;
+    code = auth.authCode;
     oAuth2Client.getToken(code, (err, token) => {
         if (err) return console.error('Error while trying to retrieve access token', err);
         oAuth2Client.setCredentials(token);
@@ -62,21 +62,16 @@ function getNewToken(oAuth2Client) {
 
 class DataAccessLayer {
 
-    updateAttendance(bool, date, name) {
+    updateAttendance(value, values, name) {
         const sheets = google.sheets({ version: 'v4', oAuth2Client });
+
         var request = {
-            // The ID of the spreadsheet to update.
             spreadsheetId: sheetInfo.attendanceId,
-            // The A1 notation of the values to update.
-            range: "12/2019!B3",  // TODO: Update placeholder value.
-
-            // How the input data should be interpreted.
-            valueInputOption: '',  // TODO: Update placeholder value.
-
+            range: "12/2019!B3",
+            valueInputOption: 'RAW', 
             resource: {
-                values: "✔"
+                values: [[value]]
             },
-
             auth: oAuth2Client,
         };
 

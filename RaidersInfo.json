@@ -1,0 +1,52 @@
+{
+  "Raiders": {
+    "Cookie#9283": "4",
+    "Babu#4094": "5",
+    "Limpa#8394": "6",
+    "Furibundo#1581": "7",
+    "Lamora#0975": "8",
+    "Aluren#8513": "9",
+    "Paivas#0605": "10",
+    "Phyxius#4483": "11",
+    "Lefie#9304": "12",
+    "Zor#1648": "13",
+    "jocasta#3321": "14",
+    "Speral#3612": "15",
+    "Throwbacks#3407": "16",
+    "Titiman#5942": "17",
+    "Cedrian#2377": "18",
+    "acid#9352": "19",
+    "Turtlestorm#3420": "20",
+    "Miraculum#4534": "21",
+    "neithyo#8103": "22",
+    "Syph#8706": "23",
+    "Getdown#1770": "24",
+    "Kilmano#4268": "25",
+    "xoveNN#0496": "26",
+    "Stomping#4619": "27",
+    "Hornshroud#9671": "28",
+    "Nenphyst#0190": "29",
+    "Anuwen#5098": "30"
+  },
+  "Months": {
+    "1": "Janeiro",
+    "2": "Fevereiro",
+    "3": "Março",
+    "4": "Abril",
+    "5": "Maio",
+    "6": "Junho",
+    "7": "Julho",
+    "8": "Agosto",
+    "9": "Setembro",
+    "10": "Outubro",
+    "11": "Novembro",
+    "12": "Dezembro"
+  }
+  "Days": {
+    "1": "B",
+    "2": "C",
+    "3": "D",
+    "4": "E",
+    "5": "F"
+  }
+}
