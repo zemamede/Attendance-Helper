@@ -1,6 +1,7 @@
 // JavaScript source code
 var Discord = require('discord.js');
 var DataAccessLayer = require('./authentication.js');
+const dictionary = require('./Dictionary.json');
 const Dal = new DataAccessLayer();
 
 const helpEmbeddedMessage = new Discord.RichEmbed()
@@ -10,7 +11,6 @@ const helpEmbeddedMessage = new Discord.RichEmbed()
     .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe', true)
     .addField('Examples', '!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy');
 
-const months = {  };
 const dateRegex = /(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})/i
 
 class Consumer {
@@ -77,32 +77,45 @@ class Consumer {
         }
     }
 
-    RunCommand(command, message, info) { 
+   RunCommand(command, message, info) { 
         var response = null;
         var values = null;
         switch (command) {
             case 'miss':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
-                    Dal.updateAttendance("✔", values, "merda");
-                    response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
+                    try{
+                        Dal.updateAttendance("✖", values, dictionary.Raiders[message.author.tag], dictionary.Days);
+                        response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                    }catch (ex)
+                    {
+                        console.log(ex);
+                    }
                 }
                 else if (values.rangeSuccess) {
                     response = message.author.username + ' vai faltar do dia ' + values.startDate[0] + ' de '
-                        + months[parseInt(values.startDate[1])] + " de " + values.startDate[2] + " at� "
-                        + values.endDate[0] + ' de ' + months[parseInt(values.endDate[1])] + " de " + values.endDate[2];
+                        + dictionary.Months[values.startDate[1]] + " de " + values.startDate[2] + " at� "
+                        + values.endDate[0] + ' de ' + dictionary.Months[values.endDate[1]] + " de " + values.endDate[2];
                 }
                 break;
             case 'come':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
-                    response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
+                    Dal.updateAttendance("✔", values, dictionary.Raiders[message.author.tag], dictionary.Days);
+                    response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
                 }
                 break;
             case 'avail':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
-                    response = "H� " + 30 + " pessoas disponiveis para dia " + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
+                    try {
+                        //var numR = Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days);
+                        const result = Dal.getValues(values, dictionary.Raiders["Total"], dictionary.Days);
+                        response = "Há " + result + " pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                    }
+                    catch (ex) {
+                        console.log(ex);
+                    }        
                 }
                 break;
             case 'help':

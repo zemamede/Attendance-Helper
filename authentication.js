@@ -1,8 +1,8 @@
 ﻿const fs = require('fs');
-const readline = require('readline');
 const { google } = require('googleapis');
 const auth = require('./auth.json');
 const sheetInfo = require('./googleSheet.json');
+const Promise = require('promise');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -62,12 +62,13 @@ function getNewToken(oAuth2Client) {
 
 class DataAccessLayer {
 
-    updateAttendance(value, values, name) {
+    updateAttendance(value, values, name, days) {
         const sheets = google.sheets({ version: 'v4', oAuth2Client });
-
+        var row = days[values.Date[0]];
+        var sheetName = values.Date[1] + "/" + values.Date[2];
         var request = {
             spreadsheetId: sheetInfo.attendanceId,
-            range: "12/2019!B3",
+            range: sheetName + "!" + row + name,
             valueInputOption: 'RAW', 
             resource: {
                 values: [[value]]
@@ -75,8 +76,70 @@ class DataAccessLayer {
             auth: oAuth2Client,
         };
 
-        sheets.spreadsheets.values.update(request);
+       sheets.spreadsheets.values.update(request);
     }
+
+    async checkAvilability(values, name, days) {
+        const sheets = google.sheets({ version: 'v4', oAuth2Client });
+        var row = days[values.Date[0]];
+        var sheetName = values.Date[1] + "/" + values.Date[2];
+
+        var request = {
+            spreadsheetId: sheetInfo.attendanceId,
+            range: sheetName + "!" + row + name,
+            auth: oAuth2Client,
+        };
+        var num = null;
+        //const num = await sheets.spreadsheets.values.get(request);
+        await sheets.spreadsheets.values.get(request, (err, res) => {
+            if (err) return console.log('The API returned an error: ' + err);
+            const rows = res.data.values;
+            
+            if (rows.length) {
+                num = rows[0][0];
+                console.log('Name, Major:');
+                // Print columns A and E, which correspond to indices 0 and 4.
+                rows.map((row) => {
+                    console.log(`${row[0]}, ${row[4]}`);
+                });
+            } else {
+                console.log('No data found.');
+            }
+        });
+        return num;
+    }
+
+
+    async getValues(values, name, days) {
+        const sheets = google.sheets({ version: 'v4', oAuth2Client });
+        var row = days[values.Date[0]];
+        var sheetName = values.Date[1] + "/" + values.Date[2];
+        var range = sheetName + "!" + row + name;
+        return new Promise((resolve, reject) => {
+            
+            // [START sheets_get_values]
+            sheets.spreadsheets.values.get({
+                spreadsheetId: sheetInfo.attendanceId,
+                range: range,
+            }, (err, result) => {
+                if (err) {
+                    // Handle error
+                    console.log(err);
+                    // [START_EXCLUDE silent]
+                    reject(err);
+                    // [END_EXCLUDE]
+                } else {
+                    const numRows = result.values ? result.values.length : 0;
+                    console.log(`${numRows} rows retrieved.`);
+                    // [START_EXCLUDE silent]
+                    resolve(result);
+                    // [END_EXCLUDE]
+                }
+            });
+            // [END sheets_get_values]
+        });
+    };
+
 
     /*function listMajors(auth) {
     const sheets = google.sheets({ version: 'v4', auth });
