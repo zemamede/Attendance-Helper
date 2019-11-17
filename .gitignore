@@ -132,4 +132,8 @@ _UpgradeReport_Files/
 __pycache__
 .DS_Store
 auth.json
+credentials.json
+googleSheet.json
+token.json
+
 *~
