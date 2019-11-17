@@ -1,6 +1,7 @@
 // JavaScript source code
 var Discord = require('discord.js');
-var Dal = require('./DataAccessLayer.js');
+var DataAccessLayer = require('./authentication.js');
+const Dal = new DataAccessLayer();
 
 const helpEmbeddedMessage = new Discord.RichEmbed()
     .setColor('#0099ff')
@@ -76,13 +77,14 @@ class Consumer {
         }
     }
 
-    RunCommand(command, message, info, sheets) { 
+    RunCommand(command, message, info, OAuthClient) { 
         var response = null;
         var values = null;
         switch (command) {
             case 'miss':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
+                    Dal.updateAttendance(true, info[1], "merda");
                     response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + months[parseInt(values.Date[1])] + " de " + values.Date[2];
                 }
                 else if (values.rangeSuccess) {

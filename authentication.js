@@ -1,8 +1,8 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
 const auth = require('./auth.json');
-const sheetInfo =  require('./googleSheet.json');
+const sheetInfo = require('./googleSheet.json');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -18,8 +18,6 @@ fs.readFile('credentials.json', (err, content) => {
     // Authorize a client with credentials, then call the Google Sheets API.
     authorize(JSON.parse(content));
 });
-
-
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -61,4 +59,49 @@ function getNewToken(oAuth2Client) {
         });
     });
 }
-exports.google = google;
+
+class DataAccessLayer {
+
+    updateAttendance(bool, date, name) {
+        const sheets = google.sheets({ version: 'v4', oAuth2Client });
+        var request = {
+            // The ID of the spreadsheet to update.
+            spreadsheetId: sheetInfo.attendanceId,
+            // The A1 notation of the values to update.
+            range: "12/2019!B3",  // TODO: Update placeholder value.
+
+            // How the input data should be interpreted.
+            valueInputOption: '',  // TODO: Update placeholder value.
+
+            resource: {
+                values: "✔"
+            },
+
+            auth: oAuth2Client,
+        };
+
+        sheets.spreadsheets.values.update(request);
+    }
+
+    /*function listMajors(auth) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    sheets.spreadsheets.values.get({
+        spreadsheetId: sheetInfo.attendanceId,
+        range: 'Class Data!A2:E',
+    }, (err, res) => {
+        if (err) return console.log('The API returned an error: ' + err);
+        const rows = res.data.values;
+        if (rows.length) {
+            console.log('Name, Major:');
+            // Print columns A and E, which correspond to indices 0 and 4.
+            rows.map((row) => {
+                console.log(`${row[0]}, ${row[4]}`);
+            });
+        } else {
+            console.log('No data found.');
+        }
+    });*/
+
+}
+
+module.exports = DataAccessLayer
