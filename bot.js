@@ -1,6 +1,7 @@
 var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
+const authentication = require('./authentication.js');
 const Consumer = require("./Consumer.js");
 const consumer = new Consumer();
 
@@ -13,9 +14,11 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 // Initialize Discord Bot
 var client = new Discord.Client();
+var sheets;
 
 client.on('ready', () => {
     console.log('Client has been started');
+     sheets = authentication.google.sheets({ version: 'v4', auth });
 });
 
 client.login(auth.token);
@@ -30,7 +33,7 @@ client.on('message', message => {
             var info = message.content.split(" ");
             var command = info[0].substring(1, info[0].length);
             if (message.channel.id == testChannelId) {
-                message.channel.send(consumer.RunCommand(command, message, info));
+                message.channel.send(consumer.RunCommand(command, message, info, sheets));
             } else {
                 message.channel.send("Unauthorized channel to send message!");
             }
