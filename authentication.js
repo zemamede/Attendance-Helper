@@ -79,6 +79,59 @@ class DataAccessLayer {
        sheets.spreadsheets.values.update(request);
     }
 
+    async createMonth(values,defaultId){
+        const sheets = google.sheets({ version: 'v4', oAuth2Client });
+        var request = {
+            // The ID of the spreadsheet containing the sheet to copy.
+            spreadsheetId: sheetInfo.attendanceId,
+        
+            // The ID of the sheet to copy.
+            sheetId: defaultId,  // TODO: Update placeholder value.
+        
+            resource: {
+              // The ID of the spreadsheet to copy the sheet to.
+              destinationSpreadsheetId: sheetInfo.attendanceId,  // TODO: Update placeholder value.
+        
+              // TODO: Add desired properties to the request body.
+            },
+        
+            auth: oAuth2Client,
+          };
+        
+          sheets.spreadsheets.sheets.copyTo(request, function(err, response) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+          });
+
+          //change spreadsheet name to default convention mm/yyyy
+          var sheetName = values.Date[0] + "/" + values.Date[1];
+          var request = {
+            // The spreadsheet to request.
+            spreadsheetId: sheetInfo.attendanceId,
+            ranges: [], 
+            includeGridData: false, 
+            auth: oAuth2Client,
+          };
+          sheets.spreadsheets.get(request, function(err, response) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+        
+            // TODO: Change code below to process the `response` object:
+            console.log(JSON.stringify(response, null, 2));
+            for(var i=0; i < response.data.sheets.length(); i ++){
+                if(response.data.sheets[i].properties.title == "Copy of Default"){
+                    console.log("ok");
+                }
+            }
+          });
+
+        
+    }
+
     async checkAttendance(values, name) {
         const sheets = google.sheets({ version: 'v4', oAuth2Client });
         var sheetName = values.Date[0] + "/" + values.Date[1];

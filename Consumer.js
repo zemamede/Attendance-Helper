@@ -141,7 +141,7 @@ class Consumer {
                         }   
                 }
                 else if (values.rangeSuccess) {
-                    response = message.author.username + ' vai faltar do dia ' + values.startDate[0] + ' de '
+                    response = "Nao implementado para a spreadsheet!!!\n" + message.author.username + ' vai faltar do dia ' + values.startDate[0] + ' de '
                         + dictionary.Months[values.startDate[1]] + " de " + values.startDate[2] + " até "
                         + values.endDate[0] + ' de ' + dictionary.Months[values.endDate[1]] + " de " + values.endDate[2];
                     this.sendChatMessage(message, response);

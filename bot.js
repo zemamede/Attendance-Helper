@@ -24,7 +24,7 @@ client.login(auth.token);
 
 var commandRegex = /^\![^\!]+$/
 var botChannelID = 0;
-var testChannelId = 644516490946543657;
+var testChannelId = 510017439510036480;
 
 client.on('message', message => {
     if (commandRegex.test(message.content)) {
