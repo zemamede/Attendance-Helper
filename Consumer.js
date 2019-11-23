@@ -121,7 +121,7 @@ class Consumer {
                                     console.log('promise success:', num);
                                     if(num != 0){
                                         Dal.updateAttendance("✖", values, dictionary.Raiders[message.author.tag], dictionary.Days);
-                                        response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                                        response = ' vai faltar no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
                                     }
                                     else{
                                         response = "Não existe raid no dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
@@ -258,4 +258,4 @@ class Consumer {
     }
 };
 
-module.exports = Consumer;
+module.exports = Consumer;  
