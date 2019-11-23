@@ -13,6 +13,8 @@ const helpEmbeddedMessage = new Discord.RichEmbed()
 
 const dateRegex = /(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})/i
 
+const specialDateRegex = /(0?[1-9]|10|11|12)\/20[0-9][0-9]/i
+
 class Consumer {
     checkValidDate(day, month, year) {
         var date = year + "-" + month + "-" + day + "T21:15:00Z"
@@ -77,7 +79,36 @@ class Consumer {
         }
     }
 
-   RunCommand(command, message, info) { 
+    tryAndParseSpecialDate(info) {
+        try {
+            var errorMessage = null;
+            var date = null
+            if (info != null) {
+                if (specialDateRegex.test(info)) {
+                    var date = info.split(/[./-]/)
+                    return { success: true, Date: date };
+                } else {
+                    errorMessage = "Invalid Month/Year combination!";
+                }  
+            }
+            if (errorMessage === null)
+                errorMessage = "Missing date!";
+            return { success: false, rangeSuccess: false, message: errorMessage }
+        } catch (ex) {
+            console.log(ex)
+        }
+    }
+
+    sendChatMessage(message, response) {
+        var chatMessage = null;
+        if (response == null)
+            chatMessage = "<@" + message.author.id + "> " + response;
+        chatMessage = ((typeof response) == (typeof new Discord.RichEmbed())) ? response : "<@" + message.author.id + "> " + response;
+
+        message.channel.send(chatMessage);
+    }
+
+    RunCommand(command, message, info) { 
         var response = null;
         var values = null;
         switch (command) {
@@ -87,6 +118,7 @@ class Consumer {
                     try{
                         Dal.updateAttendance("✖", values, dictionary.Raiders[message.author.tag], dictionary.Days);
                         response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                        this.sendChatMessage(message, response);
                     }catch (ex)
                     {
                         console.log(ex);
@@ -96,6 +128,7 @@ class Consumer {
                     response = message.author.username + ' vai faltar do dia ' + values.startDate[0] + ' de '
                         + dictionary.Months[values.startDate[1]] + " de " + values.startDate[2] + " at� "
                         + values.endDate[0] + ' de ' + dictionary.Months[values.endDate[1]] + " de " + values.endDate[2];
+                    this.sendChatMessage(message, response);
                 }
                 break;
             case 'come':
@@ -103,6 +136,7 @@ class Consumer {
                 if (values.success) {
                     Dal.updateAttendance("✔", values, dictionary.Raiders[message.author.tag], dictionary.Days);
                     response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                    this.sendChatMessage(message, response);
                 }
                 break;
             case 'avail':
@@ -110,24 +144,63 @@ class Consumer {
                 if (values.success) {
                     try {
                         //var numR = Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days);
-                        const result = Dal.getValues(values, dictionary.Raiders["Total"], dictionary.Days);
-                        response = "Há " + result + " pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                        Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days)
+                            .then((result) => {
+                                var num = result.data.values[0][0];
+                                console.log('promise success:', num);
+                                response = num > 0 ? "Há " + num + " pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2] : "Não há raid, palhacito";
+                                //message.channel.send("Há ${result.data.values[0][0]} pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2]); 
+                            })
+                            .catch((error) => {
+                                console.log('promise error:', error);
+                            })
+                            .finally(() => {
+                                console.log('Sending chat message');
+                                this.sendChatMessage(message, response);
+                            });;  
                     }
                     catch (ex) {
                         console.log(ex);
                     }        
                 }
                 break;
+            case 'Atten':
+                values = this.tryAndParseSpecialDate(info[1]);
+                if (values.success) {
+                    try {
+                        Dal.checkAttendance(values, dictionary.Raiders[message.author.tag])
+                            .then((result) => {
+                                var num = result.data.values[0][0];
+                                console.log('promise success:', num);
+                                response = "Tens " + num + "% de attendance em " + dictionary.Months[values.Date[0]] + " de " + values.Date[1];
+                                //message.channel.send("Há ${result.data.values[0][0]} pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2]); 
+                            })
+                            .catch((error) => {
+                                response = "Come merda sff";         
+                                console.log('promise error:', error);
+                            })
+                            .finally(() => {
+                                console.log('Sending chat message');
+                                this.sendChatMessage(message, response);
+                            });;
+                    }
+                    catch (ex) {
+                        console.log(ex);
+                    }
+                }
+                break;
             case 'help':
                 response = helpEmbeddedMessage;
+                this.sendChatMessage(message, response);
                 break;
             default:
                 response = "Command not found!";
-        }
-        if (response == null)
-            return "<@" + message.author.id + "> " + values.message;
-        return ((typeof response) == (typeof new Discord.RichEmbed())) ? response : "<@" + message.author.id + "> " + response;
-    }   
+                this.sendChatMessage(message, response);
+       }
+       if (response == null && values.message != null)
+           this.sendChatMessage(message, values.message);
+        //return ((typeof response) == (typeof new Discord.RichEmbed())) ? response : "<@" + message.author.id + "> " + response;
+    }
 };
 
 module.exports = Consumer;
