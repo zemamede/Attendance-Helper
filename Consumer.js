@@ -8,8 +8,8 @@ const helpEmbeddedMessage = new Discord.RichEmbed()
     .setColor('#0099ff')
     .setTitle('SN Attendance helper')
     .setDescription('User guide')
-    .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe', true)
-    .addField('Examples', '!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy');
+    .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe\n!attend - Percentage of presences in a specific month', true)
+    .addField('Examples', '!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy\n!attend mm/yyyy');
 
 const dateRegex = /(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})/i
 
@@ -41,7 +41,6 @@ class Consumer {
         try {
             var errorMessage = null;
             var date = null
-            //var rangeDate = info.includes(":");
             if (info != null) {
                 if (info.includes(":")) {
                     var rangeDate = info.split(":");
@@ -115,18 +114,35 @@ class Consumer {
             case 'miss':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
-                    try{
-                        Dal.updateAttendance("✖", values, dictionary.Raiders[message.author.tag], dictionary.Days);
-                        response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
-                        this.sendChatMessage(message, response);
-                    }catch (ex)
-                    {
-                        console.log(ex);
-                    }
+                    try {
+                        Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days)
+                                .then((result) => {
+                                    var num = result.data.values[0][0];
+                                    console.log('promise success:', num);
+                                    if(num != 0){
+                                        Dal.updateAttendance("✖", values, dictionary.Raiders[message.author.tag], dictionary.Days);
+                                        response = message.author.username + ' vai faltar no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                                    }
+                                    else{
+                                        response = "Não existe raid no dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                                    }
+                                    })
+                                .catch((error) => {
+                                    response = "Spreadsheet inválida"
+                                    console.log('promise error:', error);
+                                })
+                                .finally(() => {
+                                    console.log('Sending chat message');
+                                    this.sendChatMessage(message, response);
+                                });;  
+                        }
+                        catch (ex) {
+                            console.log(ex);
+                        }   
                 }
                 else if (values.rangeSuccess) {
                     response = message.author.username + ' vai faltar do dia ' + values.startDate[0] + ' de '
-                        + dictionary.Months[values.startDate[1]] + " de " + values.startDate[2] + " at� "
+                        + dictionary.Months[values.startDate[1]] + " de " + values.startDate[2] + " até "
                         + values.endDate[0] + ' de ' + dictionary.Months[values.endDate[1]] + " de " + values.endDate[2];
                     this.sendChatMessage(message, response);
                 }
@@ -134,24 +150,45 @@ class Consumer {
             case 'come':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
-                    Dal.updateAttendance("✔", values, dictionary.Raiders[message.author.tag], dictionary.Days);
-                    response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
-                    this.sendChatMessage(message, response);
+                    try {
+                        Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days)
+                                .then((result) => {
+                                    var num = result.data.values[0][0];
+                                    console.log('promise success:', num);
+                                    if(num != 0){
+                                        Dal.updateAttendance("✔", values, dictionary.Raiders[message.author.tag], dictionary.Days);
+                                        response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                                    }
+                                    else{
+                                        response = "Não existe raid no dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                                    }
+                                    })
+                                .catch((error) => {
+                                    response = "Spreadsheet inválida"
+                                    console.log('promise error:', error);
+                                })
+                                .finally(() => {
+                                    console.log('Sending chat message');
+                                    this.sendChatMessage(message, response);
+                                });;  
+                        }
+                        catch (ex) {
+                            console.log(ex);
+                        }   
                 }
                 break;
             case 'avail':
                 values = this.tryAndParseDate(info[1])
                 if (values.success) {
                     try {
-                        //var numR = Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days);
                         Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days)
                             .then((result) => {
                                 var num = result.data.values[0][0];
                                 console.log('promise success:', num);
-                                response = num > 0 ? "Há " + num + " pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2] : "Não há raid, palhacito";
-                                //message.channel.send("Há ${result.data.values[0][0]} pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2]); 
-                            })
+                                response = num > 0 ? "Há " + num + " pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2] : "Não existe raid no dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];;
+                                })
                             .catch((error) => {
+                                response = "Spreadsheet inválida";
                                 console.log('promise error:', error);
                             })
                             .finally(() => {
@@ -164,7 +201,7 @@ class Consumer {
                     }        
                 }
                 break;
-            case 'Atten':
+            case 'attend':
                 values = this.tryAndParseSpecialDate(info[1]);
                 if (values.success) {
                     try {
@@ -173,10 +210,9 @@ class Consumer {
                                 var num = result.data.values[0][0];
                                 console.log('promise success:', num);
                                 response = "Tens " + num + "% de attendance em " + dictionary.Months[values.Date[0]] + " de " + values.Date[1];
-                                //message.channel.send("Há ${result.data.values[0][0]} pessoas disponiveis para dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2]); 
                             })
                             .catch((error) => {
-                                response = "Come merda sff";         
+                                response = "Spreadsheet inválida";
                                 console.log('promise error:', error);
                             })
                             .finally(() => {
@@ -193,13 +229,32 @@ class Consumer {
                 response = helpEmbeddedMessage;
                 this.sendChatMessage(message, response);
                 break;
+            /*
+            case 'create':
+                values = this.tryAndParseSpecialDate(info[1]);
+                
+                if(values.success){
+                    const defaultId = 1125218752;
+                    try{
+                        Dal.createMonth(values,defaultId);
+                        response = "Sheet criada com sucesso para " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];         
+                        this.sendChatMessage(message, response);
+                    }
+                    catch(ex){
+                        response = "Erro a criar sheet para " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];  
+                        this.sendChatMessage(message, response);
+                        console.log(ex);
+                    }
+                }
+               
+               break;
+            */
             default:
                 response = "Command not found!";
                 this.sendChatMessage(message, response);
        }
        if (response == null && values.message != null)
            this.sendChatMessage(message, values.message);
-        //return ((typeof response) == (typeof new Discord.RichEmbed())) ? response : "<@" + message.author.id + "> " + response;
     }
 };
 
