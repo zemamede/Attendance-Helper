@@ -17,9 +17,11 @@ const specialDateRegex = /(0?[1-9]|10|11|12)(\/|\.|\-)20[0-9][0-9]/i
 
 class Consumer {
     checkValidDate(day, month, year) {
-        var date = year + "-" + month + "-" + day + "T21:15:00Z"
-        var compareDate = new Date(date).getTime()
-        var currentDate = new Date().getTime()
+        var date = year + "-" + month + "-" + day;
+        var requestDate = new Date(date);
+        requestDate.setHours(22);
+        var compareDate = requestDate.toISOString()
+        var currentDate = new Date().toISOString()
         if (currentDate > compareDate)
             return false;
         return true;
@@ -70,12 +72,12 @@ class Consumer {
                     }
                 }
             }
-            if (errorMessage === null)
+            if (errorMessage == null)
                 errorMessage = "Missing date OR date range!";
             return { success: false, rangeSuccess: false, message: errorMessage }
         } catch (ex) {
-            console.log(ex)
-        }
+            console.log(ex);
+        } 
     }
 
     tryAndParseSpecialDate(info) {
