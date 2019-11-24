@@ -65,7 +65,7 @@ class Consumer {
                         if (this.checkValidDate(date[0], parseInt(date[1]), date[2])) {
                             return { success: true, Date: date };
                         } else {
-                            errorMessage = "Input date was set to the past :kekw:";
+                            errorMessage = "Input date was set to the past <:AutisticPEPE:304280834574123008>";
                         }
                     } else {
                         errorMessage = "Invalid date!";
