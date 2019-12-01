@@ -23,15 +23,15 @@ client.on('ready', () => {
 client.login(auth.token);
 
 var commandRegex = /^\![^\!]+$/
-var botChannelID = 0;
-var testChannelId = 510017439510036480;
+var botChannelId = 510017439510036480;
+var debugChannelId = 649698438736248842;
 
 client.on('message', message => {
     if (commandRegex.test(message.content)) {
         try {
             var info = message.content.split(" ");
             var command = info[0].substring(1, info[0].length);
-            if (message.channel.id == testChannelId) {
+            if (message.channel.id == botChannelId || message.channel.id == debugChannelId) {
                 consumer.RunCommand(command, message, info, OAuthClient);
             } else {
                 message.channel.send("Unauthorized channel to send message!");
