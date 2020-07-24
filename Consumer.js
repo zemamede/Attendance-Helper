@@ -8,12 +8,12 @@ const helpEmbeddedMessage = new Discord.RichEmbed()
     .setColor('#0099ff')
     .setTitle('SN Attendance helper')
     .setDescription('User guide')
-    .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe\n!attend - Percentage of presences in a specific month', true)
-    .addField('Examples', '!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy\n!attend mm/yyyy');
+    .addField('Commands', '!miss - Announce when you are not available\n!come - Replace your missing status back to attending\n!avail - Number of people availabe\n!attend - Percentage of presences in a specific month\n!late - Announce that you are comming later than scheduled', true)
+    .addField('Examples', '!miss dd/mm/yyyy\n!come dd/mm/yyyy\n!avail dd/mm/yyyy\n!attend mm/yyyy\n!late dd/mm/yyyy hh:mm');
 
 const dateRegex = /(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})/i
 
-const specialDateRegex = /^(0?[1-9]|10|11|12)(\/|\.|\-)20[0-9][0-9]$/i
+const specialDateRegex = /^(0?[1-9]|10|11|12)(\/|\.|\-)20[0-9][0-9]$    /i
 
 class Consumer {
     checkValidDate(day, month, year) {
@@ -159,7 +159,7 @@ class Consumer {
                                     console.log('promise success:', num);
                                     if(num != 0){
                                         Dal.updateAttendance("✔", values, dictionary.Raiders[message.author.tag], dictionary.Days);
-                                        response = message.author.username + ' mudou de planos e pode vir no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                                        response = 'mudou de planos e pode vir no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
                                     }
                                     else{
                                         response = "Não existe raid no dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
@@ -230,6 +230,37 @@ class Consumer {
             case 'help':
                 response = helpEmbeddedMessage;
                 this.sendChatMessage(message, response);
+                break;
+
+            case 'late':
+                values = this.tryAndParseDate(info[1]);
+                if (values.success) {
+                    try{
+                        Dal.checkAvilability(values, dictionary.Raiders["Total"], dictionary.Days)
+                        .then((result) => {
+                            var num = result.data.values[0][0];
+                            console.log('promise success:', num);
+                            if(num != 0){
+                                Dal.updateAttendance(info[2], values, dictionary.Raiders[message.author.tag], dictionary.Days);
+                                response = 'vai chegar atrasado no dia ' + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2] + " às " + info[2];
+                            }
+                            else{
+                                response = "Não existe raid no dia " + values.Date[0] + " de " + dictionary.Months[values.Date[1]] + " de " + values.Date[2];
+                            }
+                            })
+                        .catch((error) => {
+                            response = "Spreadsheet inválida"
+                            console.log('promise error:', error);
+                        })
+                        .finally(() => {
+                            console.log('Sending chat message');
+                            this.sendChatMessage(message, response);
+                        });;  
+                    }
+                    catch (ex) {
+                        console.log(ex);
+                    }
+                }
                 break;
             /*
             case 'create':
